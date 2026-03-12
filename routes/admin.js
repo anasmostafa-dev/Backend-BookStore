@@ -1,25 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const Books = require("../models/BookSchema");
+const uploadCloud = require("../config/cloudinaryConfig");
 const multer = require("multer");
-const {auth} = require("../middlewares/AuthMWPermision");
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "public/images");
-  },
-  filename: function (req, file, cb) {
-    const filename = Date.now() + "-" + file.originalname;
-    cb(null, filename);
-  },
-});
-
-const upload = multer({ storage: storage });
+const { auth } = require("../middlewares/AuthMWPermision");
 
 router.post(
   "/add-book",
   auth("admin"),
-  upload.single("coverImage"),
+  uploadCloud.single("coverImage"),
   async (req, res) => {
     try {
       const {
@@ -32,11 +21,11 @@ router.post(
         isFeatured,
         isOnSale,
         discountPercent,
-        coverImage,
       } = req.body;
 
       if (!title || !author || !description || !price || !stock)
         return res.status(400).json({ error: "All fields are required" });
+
       const newBook = new Books({
         title,
         author,
@@ -47,10 +36,11 @@ router.post(
         isFeatured,
         isOnSale,
         discountPercent,
-        coverImage: req.file?.filename,
+        coverImage: req.file?.path,
       });
+
       await newBook.save();
-      res.status(201).json({ message: "Created Successfully" });
+      res.status(201).json({ message: "Created Successfully", book: newBook });
     } catch (err) {
       console.log(err);
       return res.status(500).json({ error: err.message });
