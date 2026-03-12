@@ -42,8 +42,11 @@ router.post(
       await newBook.save();
       res.status(201).json({ message: "Created Successfully", book: newBook });
     } catch (err) {
-      console.log(err);
-      return res.status(500).json({ error: err.message });
+      console.error("Mongoose Validation Error:", err.message);
+      return res.status(400).json({
+        error: "Validation Failed",
+        details: err.message,
+      });
     }
   },
 );
